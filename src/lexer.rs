@@ -185,6 +185,7 @@ impl Lexer {
             "chid" => Ok(Dhatu::Chid),
             "ci" => Ok(Dhatu::Ci),
             "yuj" => Ok(Dhatu::Yuj),
+            "adhyaya" | "adhyāya" => Ok(Dhatu::Adhyaya),
             "dṛś" | "drsh" => Ok(Dhatu::Drsh),
             _ => {
                 // Allow custom dhātu roots for extensibility
@@ -313,5 +314,19 @@ mod tests {
         let mut lexer = Lexer::new("  data-āt   sales-ena  ");
         let tokens = lexer.tokenize().unwrap();
         assert_eq!(tokens.len(), 3); // 2 tokens + EOF
+    }
+
+    #[test]
+    fn test_lexer_select_adhyaya() {
+        let mut lexer = Lexer::new("adhyaya-tvā");
+        let tokens = lexer.tokenize().unwrap();
+        assert_eq!(tokens.len(), 2);
+        match &tokens[0] {
+            Token::Verb(v) => {
+                assert_eq!(v.dhatu, Dhatu::Adhyaya);
+                assert_eq!(v.execution, ExecutionMarker::Continue);
+            }
+            _ => panic!("Expected verb token"),
+        }
     }
 }

@@ -70,6 +70,9 @@ pub enum QueryStep {
     /// Filter operation using inherited instruments
     Filter { conditions: Vec<String> },
     
+    /// Project/select operation (column projection)
+    Project { columns: Vec<String> },
+    
     /// Group-by operation
     GroupBy { columns: Vec<String> },
     
@@ -190,6 +193,19 @@ impl CompilerState {
                     .collect();
 
                 self.steps.push(QueryStep::Filter { conditions });
+            }
+
+            Dhatu::Adhyaya => {
+                // Project/select operation: select columns from context
+                let columns: Vec<String> = self.context.iter().cloned().collect();
+
+                if columns.is_empty() {
+                    return Err(CompilerError::OperationRequiresContext {
+                        dhatu: "adhyaya".to_string(),
+                    });
+                }
+
+                self.steps.push(QueryStep::Project { columns });
             }
 
             Dhatu::Ci => {
@@ -317,6 +333,34 @@ mod tests {
         match &plan.steps[1] {
             QueryStep::Filter { .. } => {} // Good
             _ => panic!("Expected Filter step"),
+        }
+    }
+
+    #[test]
+    fn test_compiler_select_operation() {
+        let mut program = make_program("data", vec!["sales", "region"]);
+        program.operations = vec![
+            Operation {
+                dhatu: Dhatu::Adhyaya,
+                execution: ExecutionMarker::Continue,
+            },
+            Operation {
+                dhatu: Dhatu::Drsh,
+                execution: ExecutionMarker::Terminal,
+            },
+        ];
+
+        let mut compiler = CompilerState::new();
+        let plan = compiler.compile(&program).unwrap();
+
+        // Should have: LoadSource, Project, Render
+        assert_eq!(plan.steps.len(), 3);
+        match &plan.steps[1] {
+            QueryStep::Project { columns } => {
+                assert!(columns.contains(&"sales".to_string()));
+                assert!(columns.contains(&"region".to_string()));
+            }
+            _ => panic!("Expected Project step"),
         }
     }
 

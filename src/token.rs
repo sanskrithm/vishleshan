@@ -59,6 +59,8 @@ pub enum Dhatu {
     Ci,
     /// yuj: sum/aggregate operation (numerical reduction)
     Yuj,
+    /// adhyaya: select/project operation (projection of columns)
+    Adhyaya,
     /// dṛś/drsh: render/print operation (visualization/execution)
     Drsh,
     /// Custom dhātu with string identifier
@@ -71,6 +73,7 @@ impl fmt::Display for Dhatu {
             Dhatu::Chid => write!(f, "chid"),
             Dhatu::Ci => write!(f, "ci"),
             Dhatu::Yuj => write!(f, "yuj"),
+            Dhatu::Adhyaya => write!(f, "adhyaya"),
             Dhatu::Drsh => write!(f, "dṛś"),
             Dhatu::Custom(name) => write!(f, "{}", name),
         }
