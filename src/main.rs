@@ -7,12 +7,12 @@
 
 mod dhatu;
 mod graph;
-mod lexer_v2;
+mod lexer;
 mod semantic;
 
 use dhatu::*;
 use graph::*;
-use lexer_v2::Lexer;
+use lexer::Lexer;
 use semantic::SemanticAnalyzer;
 use std::io::{self, Write};
 
@@ -83,7 +83,7 @@ fn run_program(input: &str) {
     let tokens = match lexer.tokenize() {
         Ok(t) => {
             for token in &t {
-                if token != &lexer_v2::Token::Eof {
+                if token != &lexer::Token::Eof {
                     println!("  {}", token);
                 }
             }
