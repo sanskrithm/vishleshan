@@ -31,7 +31,7 @@
 
 pub mod dhatu;
 pub mod graph;
-pub mod lexer_v2;
+pub mod lexer;
 pub mod semantic;
 
 // Future modules (placeholders)
@@ -41,5 +41,5 @@ pub mod semantic;
 
 pub use dhatu::*;
 pub use graph::*;
-pub use lexer_v2::*;
+pub use lexer::*;
 pub use semantic::*;
