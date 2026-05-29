@@ -1,317 +1,271 @@
-/// Pāṇini-RS: A morphology-driven Sanskrit DSL for high-performance data processing.
+/// Panini-RS main entry point with REPL, CLI, and examples.
 ///
-/// ARCHITECTURE OVERVIEW:
-/// 
-/// The Pāṇini-RS compiler implements a complete compilation pipeline:
-///
-///   Input DSL (Sanskrit Morphemes)
-///        ↓
-///   Lexer (token.rs) → Token Stream
-///        ↓
-///   Parser (parser.rs) → Abstract Syntax Tree (AST)
-///        ↓
-///   Semantic Analyzer (compiler.rs) → Query Plan
-///        ↓
-///   Runtime Execution → Polars LazyFrame → Output
-///
-/// LANGUAGE DESIGN:
-///
-/// The language is NOT traditional function syntax. Instead, it uses:
-///
-/// 1. KĀRAKA SUFFIXES (Grammatical Cases as Semantic Relations):
-///    - -āt (Apādāna): Source dataset declaration
-///    - -ena (Karaṇa): Instrument binding (parameters inherited by all operations)
-///
-/// 2. SŪTRA SUFFIXES (Control Flow):
-///    - -tvā: Lazy operation (pipeline continuation)
-///    - -ti: Terminal operation (execute and output)
-///
-/// 3. DHĀTU ROOTS (Semantic Operations):
-///    - chid: Filter
-///    - ci: Group-by
-///    - yuj: Aggregate/Sum
-///    - dṛś: Render/Visualize
-///
-/// ANUVṚTTI (State Inheritance):
-/// Once an instrument is bound with -ena, it's automatically inherited by
-/// all subsequent operations without re-declaration.
-///
-/// EXAMPLE PROGRAM:
-///   data-āt sales-ena chid-tvā yuj-tvā dṛś-ti
-///
-/// Semantic interpretation:
-///   1. data-āt        → Load dataset "data" (source)
-///   2. sales-ena      → Bind "sales" as inherited instrument
-///   3. chid-tvā       → Filter using "sales" (lazy)
-///   4. yuj-tvā        → Aggregate "sales" (lazy)
-///   5. dṛś-ti         → Render/output (terminal)
+/// Usage:
+///   panini                    # Start REPL
+///   panini example            # Run examples
+///   panini "program-code"     # Execute program
 
-mod ast;
-mod compiler;
-mod lexer;
-mod parser;
-mod token;
+mod dhatu;
+mod graph;
+mod lexer_v2;
+mod semantic;
 
-use compiler::CompilerState;
-use lexer::Lexer;
-use parser::Parser;
+use dhatu::*;
+use graph::*;
+use lexer_v2::Lexer;
+use semantic::SemanticAnalyzer;
 use std::io::{self, Write};
 
-/// Display formatted output for a query plan
-fn display_query_plan(plan: &compiler::QueryPlan) {
-    println!("\n╔════════════════════════════════════════════════╗");
-    println!("║          COMPILED QUERY PLAN                    ║");
-    println!("╚════════════════════════════════════════════════╝\n");
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
 
-    println!("📦 Inherited Parameters (Anuvṛtti):");
-    for param in &plan.context {
-        println!("   • {}", param);
+    if args.len() > 1 && args[1] == "example" {
+        run_examples();
+    } else if args.len() > 1 {
+        // Run program from arguments
+        let program = args[1..].join(" ");
+        run_program(&program);
+    } else {
+        // Start REPL
+        repl();
     }
+}
 
-    println!("\n🔄 Query Execution Pipeline:");
-    for (i, step) in plan.steps.iter().enumerate() {
-        println!("   {} → {}", i + 1, step);
-    }
+fn repl() {
+    println!("╔════════════════════════════════════════════════════════════╗");
+    println!("║ Panini-RS 0.2.0 - Morphology-Driven Analytics Compiler   ║");
+    println!("║ ASCII Transliteration + Semantic Graph IR                ║");
+    println!("╚════════════════════════════════════════════════════════════╝");
     println!();
-}
-
-/// Display the parsed AST
-fn display_ast(program: &ast::Program) {
-    println!("\n╔════════════════════════════════════════════════╗");
-    println!("║          ABSTRACT SYNTAX TREE                   ║");
-    println!("╚════════════════════════════════════════════════╝\n");
-    println!("{}\n", program);
-}
-
-/// Display the token stream
-fn display_tokens(tokens: &[token::Token]) {
-    println!("\n╔════════════════════════════════════════════════╗");
-    println!("║          TOKEN STREAM                           ║");
-    println!("╚════════════════════════════════════════════════╝\n");
-    for (i, token) in tokens.iter().enumerate() {
-        if token != &token::Token::Eof {
-            println!("   Token {}: {}", i, token);
-        }
-    }
+    println!("Examples:");
+    println!("  sales-at revenue-ena chid-tva yuj-tva drsh-ti");
+    println!("  data-at region-ena ci-tva madh-tva drsh-ti");
     println!();
-}
-
-/// Process a single Pāṇini-RS program
-fn process_program(input: &str, verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n📝 Input Program:");
-    println!("   {}\n", input);
-
-    // PHASE 1: LEXICAL ANALYSIS
-    let mut lexer = Lexer::new(input);
-    let tokens = lexer.tokenize()?;
-
-    if verbose {
-        display_tokens(&tokens);
-    }
-
-    // PHASE 2: SYNTACTIC ANALYSIS (PARSING)
-    let mut parser = Parser::new(tokens);
-    let program = parser.parse()?;
-
-    if verbose {
-        display_ast(&program);
-    }
-
-    // PHASE 3: SEMANTIC ANALYSIS & QUERY PLANNING
-    let mut compiler = CompilerState::new();
-    let query_plan = compiler.compile(&program)?;
-
-    display_query_plan(&query_plan);
-
-    println!("✅ Compilation succeeded!\n");
-
-    Ok(())
-}
-
-/// Interactive REPL for Pāṇini-RS
-fn run_repl() -> io::Result<()> {
-    println!("\n╔════════════════════════════════════════════════╗");
-    println!("║  Pāṇini-RS Compiler - Interactive REPL         ║");
-    println!("║  A Sanskrit Morphology-Driven DSL              ║");
-    println!("╚════════════════════════════════════════════════╝\n");
-
-    println!("Type 'help' for syntax help, 'quit' to exit.\n");
-
-    let stdin = io::stdin();
-    let mut stdout = io::stdout();
+    println!("Type 'help' for commands, 'examples' to see programs.");
+    println!();
 
     loop {
-        print!("pāṇini> ");
-        stdout.flush()?;
+        print!("panini> ");
+        io::stdout().flush().unwrap();
 
         let mut input = String::new();
-        stdin.read_line(&mut input)?;
-        let input = input.trim();
+        match io::stdin().read_line(&mut input) {
+            Ok(0) => break, // EOF
+            Ok(_) => {
+                let input = input.trim();
+                if input.is_empty() {
+                    continue;
+                }
 
-        if input.is_empty() {
-            continue;
-        }
-
-        if input == "quit" || input == "exit" {
-            println!("\nExiting Pāṇini-RS compiler. 🙏\n");
-            break;
-        }
-
-        if input == "help" {
-            println!(
-                r#"
-PĀṆINI-RS LANGUAGE REFERENCE
-
-KĀRAKA SUFFIXES (Grammatical Cases):
-  -āt   Source (Apādāna) - first token, declares source dataset
-  -ena  Instrument (Karaṇa) - declares inherited parameters
-
-SŪTRA SUFFIXES (Control Flow):
-  -tvā  Pipeline continuation (lazy operation)
-  -ti   Terminal execution (trigger evaluation)
-
-DHĀTU ROOTS (Standard Operations):
-  chid  Filter operation
-  ci    Group-by operation
-  yuj   Aggregate/Sum operation
-  dṛś   Render/Print operation
-
-EXAMPLE:
-  data-āt sales-ena chid-tvā yuj-tvā dṛś-ti
-
-  Interpretation:
-    1. data-āt     → Load "data" dataset
-    2. sales-ena   → Bind "sales" as inherited parameter
-    3. chid-tvā    → Filter (lazy)
-    4. yuj-tvā     → Aggregate (lazy)
-    5. dṛś-ti      → Render (terminal)
-
-ANUVṚTTI (State Inheritance):
-  Once -ena binds a parameter, it's inherited by all subsequent operations.
-"#
-            );
-            continue;
-        }
-
-        if input == "verbose" || input == "v" {
-            println!("Verbose mode toggled. Re-enter a program to see detailed output.\n");
-            continue;
-        }
-
-        match process_program(input, false) {
-            Ok(()) => {}
-            Err(e) => {
-                println!("❌ Compilation error: {}\n", e);
+                match input {
+                    "help" => print_help(),
+                    "examples" => print_examples(),
+                    "exit" | "quit" => break,
+                    _ => run_program(input),
+                }
+            }
+            Err(err) => {
+                eprintln!("Error: {}", err);
+                break;
             }
         }
     }
 
-    Ok(())
+    println!("\nGoodbye!");
 }
 
-/// Run example programs
-fn run_examples() -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n╔════════════════════════════════════════════════╗");
-    println!("║  PĀṆINI-RS COMPILER - EXAMPLE PROGRAMS         ║");
-    println!("╚════════════════════════════════════════════════╝");
+fn run_program(input: &str) {
+    println!();
 
+    // Phase 1: Lexical analysis
+    println!("=== PHASE 1: LEXICAL ANALYSIS ===");
+    let mut lexer = Lexer::new(input);
+    let tokens = match lexer.tokenize() {
+        Ok(t) => {
+            for token in &t {
+                if token != &lexer_v2::Token::Eof {
+                    println!("  {}", token);
+                }
+            }
+            t
+        }
+        Err(err) => {
+            eprintln!("✗ Lexical error: {}", err);
+            return;
+        }
+    };
+
+    // Phase 2: Semantic analysis
+    println!();
+    println!("=== PHASE 2: SEMANTIC ANALYSIS ===");
+    let mut analyzer = SemanticAnalyzer::new();
+    let graph = match analyzer.analyze(&tokens) {
+        Ok(g) => {
+            println!("✓ Semantic graph built successfully");
+            g
+        }
+        Err(err) => {
+            eprintln!("✗ Semantic error: {}", err);
+            return;
+        }
+    };
+
+    // Phase 3: Graph validation
+    println!();
+    println!("=== PHASE 3: GRAPH VALIDATION ===");
+    match graph.validate() {
+        Ok(_) => println!("✓ Semantic graph is valid"),
+        Err(err) => {
+            eprintln!("✗ Graph validation failed: {}", err);
+            return;
+        }
+    }
+
+    // Phase 4: Display graph
+    println!();
+    println!("=== PHASE 4: SEMANTIC GRAPH ===");
+    println!("{}", graph);
+
+    // Phase 5: Topological order (execution plan)
+    println!();
+    println!("=== PHASE 5: EXECUTION PLAN (Topological Order) ===");
+    let topo_order = graph.topological_order();
+    for (i, node_id) in topo_order.iter().rev().enumerate() {
+        if let Some(node) = graph.get_node(*node_id) {
+            println!("  Step {}: {}", i + 1, node);
+        }
+    }
+
+    println!();
+    println!("✓ Program compiled successfully");
+    println!();
+}
+
+fn run_examples() {
     let examples = vec![
         (
-            "Simple Load & Render",
-            "data-āt dṛś-ti",
+            "Example 1: Simple filter and aggregate",
+            "sales-at revenue-ena chid-tva yuj-tva drsh-ti",
         ),
         (
-            "Load with Instrument & Filter",
-            "data-āt sales-ena chid-tvā dṛś-ti",
+            "Example 2: Group and average",
+            "data-at region-ena ci-tva madh-tva drsh-ti",
         ),
         (
-            "Complete Example: Filter + Aggregate",
-            "data-āt sales-ena chid-tvā yuj-tvā dṛś-ti",
+            "Example 3: Multi-instrument with projection",
+            "sales-at region-ena revenue-ena adhyaya-tva drsh-ti",
         ),
         (
-            "Multiple Instruments: Filter & Group",
-            "data-āt region-ena sales-ena ci-tvā dṛś-ti",
-        ),
-        (
-            "Complex Pipeline",
-            "data-āt region-ena sales-ena chid-tvā ci-tvā yuj-tvā dṛś-ti",
+            "Example 4: Count aggregation",
+            "orders-at status-ena gan-tva drsh-ti",
         ),
     ];
 
+    println!();
+    println!("╔════════════════════════════════════════════════════════════╗");
+    println!("║ PANINI-RS EXAMPLES                                         ║");
+    println!("╚════════════════════════════════════════════════════════════╝");
+    println!();
+
     for (name, program) in examples {
-        println!("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        println!("📌 Example: {}", name);
-        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-        if let Err(e) = process_program(program, true) {
-            eprintln!("Error: {}", e);
-        }
+        println!("{}", name);
+        println!("Program: {}", program);
+        run_program(program);
+        println!();
+        println!("────────────────────────────────────────────────────────────");
+        println!();
     }
-
-    Ok(())
 }
 
-fn main() -> io::Result<()> {
-    // Check for command-line arguments
-    let args: Vec<String> = std::env::args().collect();
+fn print_help() {
+    println!();
+    println!("╔════════════════════════════════════════════════════════════╗");
+    println!("║ PANINI-RS HELP                                             ║");
+    println!("╚════════════════════════════════════════════════════════════╝");
+    println!();
+    println!("COMMANDS:");
+    println!("  help       - Show this help message");
+    println!("  examples   - Show example programs");
+    println!("  exit/quit  - Exit the REPL");
+    println!();
+    println!("SYNTAX:");
+    println!();
+    println!("  Kārakas (semantic roles):");
+    println!("    -at     apādāna (source)");
+    println!("    -ena    karaṇa (instrument/parameter)");
+    println!("    -asya   karma (output target, reserved)");
+    println!();
+    println!("  Sūtra suffixes (execution control):");
+    println!("    -tva    lazy continuation (pipeline)");
+    println!("    -ti     terminal execution (collect)");
+    println!();
+    println!("  Dhātu operations (ASCII only):");
+    println!();
+    println!("  Aggregation:");
+    println!("    yuj     sum");
+    println!("    madh    mean/average");
+    println!("    gan     count");
+    println!("    lagh    minimum");
+    println!("    mah     maximum");
+    println!();
+    println!("  Transformation:");
+    println!("    chid    filter");
+    println!("    adhyaya project/select");
+    println!("    kram    sort");
+    println!("    vibhaj  partition");
+    println!();
+    println!("  Relational:");
+    println!("    ci      group-by");
+    println!("    mel     join");
+    println!();
+    println!("  Terminal:");
+    println!("    drsh    render/print");
+    println!();
+    println!("PANINIAN PRINCIPLES:");
+    println!("  - Morphology-driven semantics (no positional arguments)");
+    println!("  - Anuvrtti: inherited context propagation");
+    println!("  - Kāraka: semantic dependency relations");
+    println!("  - Semantic graph IR (not just AST)");
+    println!("  - ASCII transliteration (UTF-8 free)");
+    println!();
+}
 
-    if args.len() > 1 {
-        match args[1].as_str() {
-            "examples" => {
-                if let Err(e) = run_examples() {
-                    eprintln!("Fatal error: {}", e);
-                    std::process::exit(1);
-                }
-            }
-            "repl" | "-i" => {
-                run_repl()?;
-            }
-            "-h" | "--help" => {
-                println!(
-                    r#"
-PĀṆINI-RS COMPILER
-
-Usage: panini_rs [COMMAND] [ARGS]
-
-COMMANDS:
-  examples     Run compiled example programs
-  repl, -i     Start interactive REPL
-  -h, --help   Show this help message
-
-QUICK START:
-  # Interactive REPL
-  panini_rs repl
-
-  # Run examples
-  panini_rs examples
-
-LANGUAGE:
-  Write programs in Sanskrit morphological form:
-  
-  data-āt sales-ena chid-tvā yuj-tvā dṛś-ti
-  
-  Where:
-    -āt   = source dataset (Apādāna)
-    -ena  = inherited parameter (Karaṇa)
-    -tvā  = lazy operation (pipeline continuation)
-    -ti   = terminal operation (execute)
-"#
-                );
-            }
-            program => {
-                // Direct program execution
-                if let Err(e) = process_program(program, false) {
-                    eprintln!("❌ Compilation error: {}\n", e);
-                    std::process::exit(1);
-                }
-            }
-        }
-    } else {
-        // Default: run REPL
-        run_repl()?;
-    }
-
-    Ok(())
+fn print_examples() {
+    println!();
+    println!("╔════════════════════════════════════════════════════════════╗");
+    println!("║ QUICK EXAMPLES                                             ║");
+    println!("╚════════════════════════════════════════════════════════════╝");
+    println!();
+    println!("EXAMPLE 1: Filter + Sum");
+    println!("  sales-at revenue-ena chid-tva yuj-tva drsh-ti");
+    println!();
+    println!("  Semantics:");
+    println!("    1. Load 'sales' dataset (apādāna, -at)");
+    println!("    2. Inherit 'revenue' as parameter (karaṇa, -ena)");
+    println!("    3. Filter rows (chid)");
+    println!("    4. Sum columns (yuj)");
+    println!("    5. Render output (drsh-ti, terminal)");
+    println!();
+    println!("EXAMPLE 2: Group + Average");
+    println!("  data-at region-ena ci-tva madh-tva drsh-ti");
+    println!();
+    println!("  Semantics:");
+    println!("    1. Load 'data' dataset");
+    println!("    2. Inherit 'region' as grouping key");
+    println!("    3. Group by region (ci)");
+    println!("    4. Calculate mean (madh)");
+    println!("    5. Render output");
+    println!();
+    println!("EXAMPLE 3: Multiple Parameters (Anuvrtti)");
+    println!("  sales-at region-ena revenue-ena ci-tva yuj-tva drsh-ti");
+    println!();
+    println!("  Semantics:");
+    println!("    1. Load 'sales' dataset");
+    println!("    2. Inherit 'region' and 'revenue' (both available everywhere)");
+    println!("    3. Group by region (ci)");
+    println!("    4. Sum revenue (yuj)");
+    println!("    5. Render output");
+    println!();
 }
 
 #[cfg(test)]
@@ -319,36 +273,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_full_pipeline_simple() {
-        let program = "data-āt dṛś-ti";
-        let result = process_program(program, false);
-        assert!(result.is_ok());
+    fn test_lexer_integration() {
+        let input = "sales-at revenue-ena chid-tva yuj-tva drsh-ti";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize().unwrap();
+        assert!(tokens.len() > 0);
     }
 
     #[test]
-    fn test_full_pipeline_with_instruments() {
-        let program = "data-āt sales-ena chid-tvā dṛś-ti";
-        let result = process_program(program, false);
-        assert!(result.is_ok());
+    fn test_semantic_analysis_integration() {
+        let input = "sales-at revenue-ena chid-tva yuj-tva drsh-ti";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize().unwrap();
+        
+        let mut analyzer = SemanticAnalyzer::new();
+        let graph = analyzer.analyze(&tokens).unwrap();
+        assert!(graph.validate().is_ok());
     }
 
     #[test]
-    fn test_full_pipeline_example() {
-        let program = "data-āt sales-ena chid-tvā yuj-tvā dṛś-ti";
-        let result = process_program(program, false);
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_compilation_error_handling() {
-        // Missing source
-        let program = "sales-ena dṛś-ti";
-        let result = process_program(program, false);
-        assert!(result.is_err());
-
-        // No terminal operation
-        let program = "data-āt sales-ena chid-tvā";
-        let result = process_program(program, false);
-        assert!(result.is_err());
+    fn test_dhatu_parsing() {
+        assert_eq!(Dhatu::from_ascii("chid"), Some(Dhatu::Transformation(TransformationDhatu::Chid)));
+        assert_eq!(Dhatu::from_ascii("yuj"), Some(Dhatu::Aggregation(AggregationDhatu::Yuj)));
+        assert_eq!(Dhatu::from_ascii("drsh"), Some(Dhatu::Terminal(TerminalDhatu::Drsh)));
     }
 }
