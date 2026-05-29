@@ -12,28 +12,25 @@ jobs:
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    permissions:
+      contents: write
     steps:
+      - uses: actions/checkout@v4
+      
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            Panini-RS Release ${{ github.ref }}
-            
-            See RELEASE_NOTES_v0.2.md for details.
-          draft: false
-          prerelease: false
+        run: |
+          gh release create ${{ github.ref_name }} \
+            --title "Panini-RS ${{ github.ref_name }}" \
+            --body "See RELEASE_NOTES_v0.2.md for details." \
+            --draft=false
 
   build-release:
     name: Build Release
-    needs: create-release
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -92,14 +89,11 @@ jobs:
         run: echo "asset=${{ matrix.asset_name }}-${{ github.ref_name }}" >> $GITHUB_OUTPUT
       
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-          asset_name: ${{ steps.asset.outputs.asset }}
-          asset_content_type: application/octet-stream
+        run: |
+          gh release upload ${{ github.ref_name }} \
+            target/${{ matrix.target }}/release/${{ matrix.artifact_name }}#${{ steps.asset.outputs.asset }}
 
   create-checksums:
     name: Create Checksums
@@ -109,7 +103,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: ./artifacts
 
