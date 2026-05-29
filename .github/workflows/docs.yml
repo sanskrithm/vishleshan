@@ -1,0 +1,61 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      
+      - name: Build documentation
+        run: cargo doc --no-deps --release
+        env:
+          RUSTDOCFLAGS: -D warnings
+      
+      - name: Verify all docs build
+        run: cargo doc --all --no-deps --release
+
+  check-docs:
+    name: Check Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for documentation files
+        run: |
+          echo "Checking documentation files..."
+          files=(
+            "START_HERE.md"
+            "QUICKREF_v0.2.md"
+            "README.md"
+            "SEMANTIC_GRAPH_ARCHITECTURE.md"
+            "v0.2_CONSOLIDATION_COMPLETE.md"
+          )
+          for file in "${files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "Missing documentation: $file"
+              exit 1
+            fi
+          done
+          echo "All documentation files present"
+      
+      - name: Validate markdown
+        uses: nosborn/github-action-markdown-cli@v3.3.0
+        with:
+          files: .
+          config_file: .markdownlint.json
+        continue-on-error: true
