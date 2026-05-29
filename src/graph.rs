@@ -206,7 +206,7 @@ impl SemanticGraph {
     }
 
     /// Recursively propagate context from a starting node
-    fn propagate_from(&mut self, node_id: usize, mut context: Vec<String>) {
+    fn propagate_from(&mut self, node_id: usize, context: Vec<String>) {
         // Get outgoing edges
         let next_edges: Vec<(usize, Karaka)> = if let Some(edges) = self.edges.get(&node_id) {
             edges.iter().map(|(to, edge)| (*to, edge.karaka)).collect()

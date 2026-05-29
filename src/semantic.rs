@@ -14,7 +14,7 @@
 
 use crate::dhatu::{AggregationDhatu, Dhatu, KarakaSuffix, RelationalDhatu, SutraSuffix, TransformationDhatu};
 use crate::graph::{Karaka, NodeKind, SemanticGraph};
-use crate::lexer_v2::Token;
+use crate::lexer::Token;
 use std::fmt;
 
 #[derive(Debug, Clone)]
@@ -249,7 +249,7 @@ impl Default for SemanticAnalyzer {
 mod tests {
     use super::*;
     use crate::dhatu::{TransformationDhatu, TerminalDhatu};
-    use crate::lexer_v2::Lexer;
+    use crate::lexer::Lexer;
 
     fn tokenize(input: &str) -> Vec<Token> {
         let mut lexer = Lexer::new(input);

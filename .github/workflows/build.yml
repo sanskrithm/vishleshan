@@ -121,7 +121,7 @@ jobs:
         run: strip target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
       
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: panini-${{ matrix.os }}
           path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
