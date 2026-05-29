@@ -6,11 +6,8 @@
 /// CORE MODULES:
 /// 1. dhatu - Extended dhatu system (operation opcodes) with ASCII transliteration
 /// 2. graph - Semantic graph representation with Karaka relations
-/// 3. lexer_v2 - ASCII-only tokenizer (zero-copy FSM)
+/// 3. lexer - ASCII-only tokenizer (zero-copy FSM)
 /// 4. semantic - Semantic analyzer building semantic graphs with Anuvrtti
-/// 5. optimizer - Query optimization passes (rewrite rules)
-/// 6. planner - Execution DAG planning
-/// 7. runtime - Polars LazyFrame lowering
 ///
 /// COMPILATION PIPELINE:
 /// Input (ASCII transliterated Sanskrit)
@@ -21,13 +18,14 @@
 ///   ↓
 /// Anuvrtti Engine (context inheritance propagation)
 ///   ↓
-/// Optimizer (rewrite passes)
-///   ↓
-/// Execution Planner (DAG generation)
-///   ↓
 /// Polars Runtime (LazyFrame lowering)
 ///   ↓
 /// Output (Arrow-backed execution)
+///
+/// FUTURE MODULES (v0.3+):
+/// - optimizer - Query optimization passes (rewrite rules)
+/// - planner - Execution DAG planning
+/// - runtime - Polars LazyFrame lowering (detailed)
 
 pub mod dhatu;
 pub mod graph;
