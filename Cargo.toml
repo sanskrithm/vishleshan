@@ -1,0 +1,32 @@
+[package]
+name = "panini-rs"
+version = "0.2.0"
+edition = "2021"
+description = "Morphology-driven semantic analytics compiler"
+authors = ["Bipin Singh"]
+
+[dependencies]
+polars = { version = "0.35", features = ["lazy", "parquet", "csv", "strings"] }
+petgraph = "0.6"
+indexmap = "2.0"
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Optional: LLVM support
+# inkwell = "0.18"
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bin]]
+name = "panini"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[profile.dev]
+opt-level = 1
