@@ -134,23 +134,29 @@ QueryPlan {
 
 ```
 src/
-├── token.rs          # Token definitions (strongly-typed)
-├── lexer.rs          # Lexical analyzer (tokenizer)
-├── parser.rs         # Syntactic analyzer (recursive descent)
-├── ast.rs            # Abstract Syntax Tree definitions
-├── compiler.rs       # Semantic analyzer & query planner
+├── dhatu.rs          # Dhatu/opcode definitions (aggregate/transform/relational)
+├── graph.rs          # Semantic Graph IR (nodes, Karaka edges, propagation)
+├── lexer.rs          # ASCII-only tokenizer (FSM)
+├── semantic.rs       # Semantic analyzer (Anuvrtti + graph builder)
+├── optimizer.rs      # Paribhasha rewrite engine (query optimizer)
+├── planner.rs        # Execution planner (ExecutionPlan IR)
 ├── lib.rs            # Library exports
-└── main.rs           # CLI interface and REPL
+└── main.rs           # CLI/REPL and examples
 
 tests/
-└── integration_tests.rs  # End-to-end compilation tests
+└── integration_tests.rs  # End-to-end compilation & planning tests
+
+.github/
+└── workflows/        # CI (runs cargo fmt/clippy/tests)
 
 docs/
 ├── README.md         # This file
-├── ARCHITECTURE.md   # Detailed architecture
-└── SEMANTICS.md      # Formal semantics
+├── SEMANTIC_GRAPH_ARCHITECTURE.md   # Detailed architecture
+└── MIGRATION_v0.1_TO_v0.2.md      # Migration guide
 
 Cargo.toml           # Rust package manifest
+LICENSE               # Apache-2.0 license (renamed from LICENSE.tcl)
+.gitignore            # Excludes /target/ and editor files
 ```
 
 ## 🔧 Module Descriptions
@@ -176,14 +182,9 @@ Hand-written lexer (no regex):
 **Lines**: 400 | **Algorithm**: Finite state machine, suffix matching
 
 ### `parser.rs` - Syntactic Analysis
-Recursive descent parser:
-- Phase 1: Extract source (Apādāna, -āt)
-- Phase 2: Extract instruments (Karaṇa, -ena)
-- Phase 3: Extract operations (verbal morphemes)
-- Validates structural constraints
-- Enforces terminal operation requirement
+Recursive descent parser (legacy placeholder): the current pipeline uses `lexer.rs` + `semantic.rs` directly to build the SemanticGraph. Parser module is available as a future layering option.
 
-**Lines**: 350 | **Pattern**: Recursive descent, lookahead
+**Status**: parsing responsibilities are implemented in `semantic.rs` (three-phase analyzer)
 
 ### `ast.rs` - Abstract Syntax Tree
 AST representations:
@@ -195,18 +196,20 @@ AST representations:
 
 **Lines**: 300 | **Concepts**: Validation, introspection methods
 
-### `compiler.rs` - Semantic Analysis
-Query planner and compiler state:
-- `CompilerState`: Maintains context (Anuvṛtti implementation)
-- `QueryPlan`: Lowered query representation
-- `QueryStep`: Individual compilation steps
-  - `LoadSource`: Data loading
-  - `Filter`: Predicate application
-  - `GroupBy`: Aggregation grouping
-  - `Aggregate`: Numerical reduction
-  - `Render`: Pipeline execution
+### `semantic.rs` - Semantic Analysis
+Three-phase analyzer (source → instruments → operations) that directly constructs the `SemanticGraph` IR, performs Karaka resolution and Anuvrtti propagation, and validates pipeline constraints. This is where parsing and semantic checks are centralized.
 
-**Lines**: 400 | **Semantics**: Anuvṛtti, context inheritance, Polars lowering
+**Lines**: 350 | **Semantics**: Karaka resolution, Anuvrtti, graph construction
+
+### `optimizer.rs` - Query Optimization (Paribhasha)
+Implements a Paribhasha rewrite engine with modular passes for redundancy elimination, filter pushdown, aggregation coalescing, and projection pruning. Provides `QueryOptimizer` and `OptimizationPass` trait.
+
+**Status**: Implemented (basic passes scaffolding) | **Location**: `src/optimizer.rs`
+
+### `planner.rs` - Execution Planning
+Converts `SemanticGraph` → `ExecutionPlan` (steps) with backend selection hooks (Polars, Arrow, DuckDB, DataFusion). Emits `ExecutionStep` IR suitable for backend lowering.
+
+**Status**: Implemented (ExecutionPlan IR + planner) | **Location**: `src/planner.rs`
 
 ## 🚀 Getting Started
 

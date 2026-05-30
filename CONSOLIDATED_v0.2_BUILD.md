@@ -53,13 +53,15 @@ Output
 
 | Module | Lines | Purpose | Status |
 |--------|-------|---------|--------|
-| **dhatu.rs** | 273 | 15+ operations, ASCII parsing | ✅ Final |
-| **graph.rs** | 322 | Semantic graph IR, Anuvrtti | ✅ Final |
+| **dhatu.rs** | 300 | Operation definitions (aggregation/transform) | ✅ Final |
+| **graph.rs** | 400 | Semantic graph IR, Anuvrtti, analysis | ✅ Final |
 | **lexer.rs** | 175 | ASCII-only FSM (no regex) | ✅ Final |
-| **semantic.rs** | 350 | 3-phase analyzer, context propagation | ✅ Final |
-| **main.rs** | 275 | REPL + 4 examples | ✅ Final |
-| **lib.rs** | 42 | Module exports | ✅ Final |
-| **Total** | 1,437 | Production code | ✅ READY |
+| **semantic.rs** | 380 | Semantic analyzer, Karaka resolution | ✅ Final |
+| **optimizer.rs** | 260 | Paribhasha rewrite engine (basic passes) | ✅ Implemented |
+| **planner.rs** | 230 | Execution planner & ExecutionPlan IR | ✅ Implemented |
+| **main.rs** | 300 | REPL + examples + integration hooks | ✅ Final |
+| **lib.rs** | 60 | Module exports | ✅ Final |
+| **Total** | ~1,825 | Production code + optimizer/planner | ✅ READY |
 
 ---
 
@@ -95,17 +97,21 @@ All v0.1 Unicode has been removed. v0.2 uses **ASCII-only** transliteration:
 
 ```
 src/
-  dhatu.rs         (273 lines) - Operation definitions
-  graph.rs         (322 lines) - Semantic graph IR
+  dhatu.rs         (300 lines) - Operation definitions
+  graph.rs         (400 lines) - Semantic graph IR
   lexer.rs         (175 lines) - ASCII tokenizer
-  semantic.rs      (350 lines) - Semantic analyzer
-  main.rs          (275 lines) - CLI/REPL
-  lib.rs           (42 lines)  - Module exports
+  semantic.rs      (380 lines) - Semantic analyzer
+  optimizer.rs     (260 lines) - Paribhasha optimizer
+  planner.rs       (230 lines) - Execution planner
+  main.rs          (300 lines) - CLI/REPL
+  lib.rs           (60 lines)  - Module exports
 
 Cargo.toml         - Build config (v0.2 deps)
 README.md          - Project overview
 START_HERE.md      - Entry point guide
 QUICKREF_v0.2.md   - Syntax reference
+LICENSE            - Apache 2.0 license
+.gitignore         - standard ignores (target/)
 [10+ docs]         - Complete documentation
 
 NO v0.1 FILES REMAIN
@@ -170,11 +176,10 @@ execution time: < 2 seconds
 
 ## Next Phase: v0.3
 
-- Query optimizer (rewrite engine)
-- Polars LazyFrame lowering
-- Performance optimization
-- Predicate operations
-- Join support
+- Polars LazyFrame lowering (runtime lowering)
+- Performance optimization and cost model improvements
+- Distributed execution planning and partitioning
+- Advanced predicate pushdown and operator fusion
 
 ---
 

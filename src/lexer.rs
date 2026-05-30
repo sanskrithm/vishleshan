@@ -12,7 +12,6 @@
 ///   Verb("chid", "tva")
 ///   Verb("yuj", "tva")
 ///   Verb("drsh", "ti")
-
 use crate::dhatu::{Dhatu, KarakaSuffix, SutraSuffix};
 use std::fmt;
 
@@ -177,7 +176,10 @@ mod tests {
         let tokens = lexer.tokenize().unwrap();
         match &tokens[0] {
             Token::Verb { dhatu, sutra } => {
-                assert_eq!(*dhatu, Dhatu::Transformation(crate::dhatu::TransformationDhatu::Chid));
+                assert_eq!(
+                    *dhatu,
+                    Dhatu::Transformation(crate::dhatu::TransformationDhatu::Chid)
+                );
                 assert_eq!(*sutra, SutraSuffix::Tva);
             }
             _ => panic!("Expected verb"),

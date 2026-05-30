@@ -11,7 +11,6 @@
 /// - Edges represent semantic dependencies (Karakas)
 /// - Graph is acyclic (DAG) for lazy evaluation
 /// - Supports optimizer rewrite passes
-
 use indexmap::IndexMap;
 use std::fmt;
 
@@ -89,9 +88,22 @@ pub struct Edge {
 
 impl fmt::Display for Edge {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}({})", self.karaka, 
-               self.metadata.as_ref().unwrap_or(&"_".to_string()))
+        write!(
+            f,
+            "{}({})",
+            self.karaka,
+            self.metadata.as_ref().unwrap_or(&"_".to_string())
+        )
     }
+}
+
+/// Graph statistics
+#[derive(Debug, Clone)]
+pub struct GraphStats {
+    pub node_count: usize,
+    pub edge_count: usize,
+    pub depth: usize,
+    pub is_dag: bool,
 }
 
 /// Semantic graph node with metadata.
@@ -107,8 +119,11 @@ pub struct Node {
 
 impl fmt::Display for Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Node#{}: {} [context: {:?}, terminal: {}]", 
-               self.id, self.kind, self.inherited_context, self.is_terminal)
+        write!(
+            f,
+            "Node#{}: {} [context: {:?}, terminal: {}]",
+            self.id, self.kind, self.inherited_context, self.is_terminal
+        )
     }
 }
 
@@ -229,16 +244,21 @@ impl SemanticGraph {
     pub fn topological_order(&self) -> Vec<usize> {
         let mut order = Vec::new();
         let mut visited = std::collections::HashSet::new();
-        
+
         if let Some(entry) = self.entry_id {
             self.topo_visit(entry, &mut visited, &mut order);
         }
-        
+
         order
     }
 
     /// Recursive topological sort helper
-    fn topo_visit(&self, node_id: usize, visited: &mut std::collections::HashSet<usize>, order: &mut Vec<usize>) {
+    fn topo_visit(
+        &self,
+        node_id: usize,
+        visited: &mut std::collections::HashSet<usize>,
+        order: &mut Vec<usize>,
+    ) {
         if visited.contains(&node_id) {
             return;
         }
@@ -261,7 +281,107 @@ impl SemanticGraph {
         if self.exit_id.is_none() {
             return Err("No exit node (render)".to_string());
         }
+
+        // Validate DAG acyclicity (no cycles)
+        if !self.is_acyclic() {
+            return Err("Graph contains cycles (not a DAG)".to_string());
+        }
+
         Ok(())
+    }
+
+    /// Check if the graph is acyclic (true DAG)
+    pub fn is_acyclic(&self) -> bool {
+        let mut visited = std::collections::HashSet::new();
+        let mut rec_stack = std::collections::HashSet::new();
+
+        if let Some(entry) = self.entry_id {
+            return !self.has_cycle_dfs(entry, &mut visited, &mut rec_stack);
+        }
+        true
+    }
+
+    /// DFS cycle detection helper
+    fn has_cycle_dfs(
+        &self,
+        node: usize,
+        visited: &mut std::collections::HashSet<usize>,
+        rec_stack: &mut std::collections::HashSet<usize>,
+    ) -> bool {
+        visited.insert(node);
+        rec_stack.insert(node);
+
+        if let Some(edges) = self.edges.get(&node) {
+            for (next, _) in edges {
+                if !visited.contains(next) {
+                    if self.has_cycle_dfs(*next, visited, rec_stack) {
+                        return true;
+                    }
+                } else if rec_stack.contains(next) {
+                    return true;
+                }
+            }
+        }
+
+        rec_stack.remove(&node);
+        false
+    }
+
+    /// Get all nodes reachable from a given node
+    pub fn reachable_from(&self, node_id: usize) -> std::collections::HashSet<usize> {
+        let mut reachable = std::collections::HashSet::new();
+        self.reachable_dfs(node_id, &mut reachable);
+        reachable
+    }
+
+    /// DFS to collect reachable nodes
+    fn reachable_dfs(&self, node_id: usize, reachable: &mut std::collections::HashSet<usize>) {
+        if reachable.contains(&node_id) {
+            return;
+        }
+        reachable.insert(node_id);
+
+        if let Some(edges) = self.edges.get(&node_id) {
+            for (next, _) in edges {
+                self.reachable_dfs(*next, reachable);
+            }
+        }
+    }
+
+    /// Get the depth of the graph (longest path from entry to exit)
+    pub fn depth(&self) -> usize {
+        if let Some(entry) = self.entry_id {
+            self.depth_from(entry)
+        } else {
+            0
+        }
+    }
+
+    /// Calculate depth from a given node
+    fn depth_from(&self, node_id: usize) -> usize {
+        if let Some(edges) = self.edges.get(&node_id) {
+            if edges.is_empty() {
+                1
+            } else {
+                1 + edges
+                    .iter()
+                    .map(|(next, _)| self.depth_from(*next))
+                    .max()
+                    .unwrap_or(0)
+            }
+        } else {
+            1
+        }
+    }
+
+    /// Get statistics about the graph
+    pub fn stats(&self) -> GraphStats {
+        GraphStats {
+            node_count: self.nodes.len(),
+            edge_count: self.edges.iter().map(|(_, e)| e.len()).sum(),
+            depth: self.depth(),
+            is_dag: self.is_acyclic(),
+        }
     }
 }
 
@@ -296,23 +416,38 @@ mod tests {
     #[test]
     fn test_semantic_graph_creation() {
         let mut graph = SemanticGraph::new();
-        let source_id = graph.add_node(NodeKind::Source { name: "sales".to_string() }, false);
+        let source_id = graph.add_node(
+            NodeKind::Source {
+                name: "sales".to_string(),
+            },
+            false,
+        );
         let render_id = graph.add_node(NodeKind::Render, true);
-        
+
         graph.set_entry(source_id);
         graph.set_exit(render_id);
-        
+
         assert!(graph.validate().is_ok());
     }
 
     #[test]
     fn test_semantic_graph_edges() {
         let mut graph = SemanticGraph::new();
-        let source = graph.add_node(NodeKind::Source { name: "data".to_string() }, false);
-        let filter = graph.add_node(NodeKind::Filter { predicate: "revenue > 0".to_string() }, false);
-        
+        let source = graph.add_node(
+            NodeKind::Source {
+                name: "data".to_string(),
+            },
+            false,
+        );
+        let filter = graph.add_node(
+            NodeKind::Filter {
+                predicate: "revenue > 0".to_string(),
+            },
+            false,
+        );
+
         graph.add_edge(source, filter, Karaka::Source);
-        
+
         let edges = graph.get_edges(source).unwrap();
         assert_eq!(edges.len(), 1);
         assert_eq!(edges[0].0, filter);
@@ -322,20 +457,33 @@ mod tests {
     #[test]
     fn test_anuvrtti_context_propagation() {
         let mut graph = SemanticGraph::new();
-        let source = graph.add_node(NodeKind::Source { name: "data".to_string() }, false);
-        let filter = graph.add_node(NodeKind::Filter { predicate: "x > 0".to_string() }, false);
-        let agg = graph.add_node(NodeKind::Aggregate { 
-            op: "sum".to_string(), 
-            columns: vec!["revenue".to_string()] 
-        }, false);
-        
+        let source = graph.add_node(
+            NodeKind::Source {
+                name: "data".to_string(),
+            },
+            false,
+        );
+        let filter = graph.add_node(
+            NodeKind::Filter {
+                predicate: "x > 0".to_string(),
+            },
+            false,
+        );
+        let agg = graph.add_node(
+            NodeKind::Aggregate {
+                op: "sum".to_string(),
+                columns: vec!["revenue".to_string()],
+            },
+            false,
+        );
+
         graph.add_edge(source, filter, Karaka::Source);
         graph.add_edge(filter, agg, Karaka::Object);
         graph.set_entry(source);
-        
+
         let initial_context = vec!["revenue".to_string(), "region".to_string()];
         graph.propagate_context(initial_context);
-        
+
         // All nodes should have inherited context
         assert_eq!(graph.get_node(source).unwrap().inherited_context.len(), 2);
         assert_eq!(graph.get_node(filter).unwrap().inherited_context.len(), 2);
@@ -345,14 +493,24 @@ mod tests {
     #[test]
     fn test_topological_order() {
         let mut graph = SemanticGraph::new();
-        let source = graph.add_node(NodeKind::Source { name: "data".to_string() }, false);
-        let filter = graph.add_node(NodeKind::Filter { predicate: "x > 0".to_string() }, false);
+        let source = graph.add_node(
+            NodeKind::Source {
+                name: "data".to_string(),
+            },
+            false,
+        );
+        let filter = graph.add_node(
+            NodeKind::Filter {
+                predicate: "x > 0".to_string(),
+            },
+            false,
+        );
         let render = graph.add_node(NodeKind::Render, true);
-        
+
         graph.add_edge(source, filter, Karaka::Source);
         graph.add_edge(filter, render, Karaka::Object);
         graph.set_entry(source);
-        
+
         let order = graph.topological_order();
         assert_eq!(order, vec![render, filter, source]);
     }

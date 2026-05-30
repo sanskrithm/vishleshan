@@ -4,7 +4,6 @@
 ///   panini                    # Start REPL
 ///   panini example            # Run examples
 ///   panini "program-code"     # Execute program
-
 mod dhatu;
 mod graph;
 mod lexer;
@@ -271,6 +270,7 @@ fn print_examples() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use dhatu::{AggregationDhatu, TransformationDhatu, TerminalDhatu};
 
     #[test]
     fn test_lexer_integration() {
@@ -285,7 +285,7 @@ mod tests {
         let input = "sales-at revenue-ena chid-tva yuj-tva drsh-ti";
         let mut lexer = Lexer::new(input);
         let tokens = lexer.tokenize().unwrap();
-        
+
         let mut analyzer = SemanticAnalyzer::new();
         let graph = analyzer.analyze(&tokens).unwrap();
         assert!(graph.validate().is_ok());
@@ -293,8 +293,17 @@ mod tests {
 
     #[test]
     fn test_dhatu_parsing() {
-        assert_eq!(Dhatu::from_ascii("chid"), Some(Dhatu::Transformation(TransformationDhatu::Chid)));
-        assert_eq!(Dhatu::from_ascii("yuj"), Some(Dhatu::Aggregation(AggregationDhatu::Yuj)));
-        assert_eq!(Dhatu::from_ascii("drsh"), Some(Dhatu::Terminal(TerminalDhatu::Drsh)));
+        assert_eq!(
+            Dhatu::from_ascii("chid"),
+            Some(Dhatu::Transformation(TransformationDhatu::Chid))
+        );
+        assert_eq!(
+            Dhatu::from_ascii("yuj"),
+            Some(Dhatu::Aggregation(AggregationDhatu::Yuj))
+        );
+        assert_eq!(
+            Dhatu::from_ascii("drsh"),
+            Some(Dhatu::Terminal(TerminalDhatu::Drsh))
+        );
     }
 }

@@ -22,7 +22,7 @@
 ### Aggregation (Yāvat Gaṇa)
 | Dhatu | ASCII | Meaning | Polars | Example |
 |-------|-------|---------|--------|---------|
-| Yuj | `yuj` | Sum | `.sum()` | `yuj-tva` |
+     ↓ Lexer (src/lexer.rs)
 | Madh | `madh` | Average | `.mean()` | `madh-tva` |
 | Gan | `gan` | Count | `.count()` | `gan-tva` |
 | Lagh | `lagh` | Minimum | `.min()` | `lagh-tva` |
@@ -44,9 +44,9 @@
 
 ### Terminal (Nirvartana)
 | Dhatu | ASCII | Meaning | Polars | Example |
-|-------|-------|---------|--------|---------|
+  lexer.rs        - ASCII tokenizer (no regex)
 | Drsh | `drsh` | Render/Execute | `.collect()` | `drsh-ti` |
-
+  main.rs         - CLI/REPL interface
 ### Predicate (Adhikara Gaṇa) - Reserved v0.3
 | Dhatu | ASCII | Meaning | Polars | Example |
 |-------|-------|---------|--------|---------|
@@ -58,14 +58,14 @@
 ---
 
 ## Sūtra Suffixes (Execution Control)
-
+4. **src/main.rs** - How to use the CLI
 | Suffix | ASCII | Meaning | Behavior |
 |--------|-------|---------|----------|
 | -tvā | `-tva` | Pipeline (lazy) | Continue lazy evaluation |
 | -ti | `-ti` | Terminal | Collect/execute results |
 
 ---
-
+4. **src/main.rs** - How to use the CLI
 ## Kāraka Relations (Semantic Roles)
 
 | Karaka | Suffix | Meaning | Graph Role |
@@ -158,7 +158,7 @@ Interpretation:
 
 ```
 Input Program
-    ↓ Lexer (src/lexer_v2.rs)
+  ↓ Lexer (src/lexer.rs)
 Token Stream [Morpheme, Verb, Particle]
     ↓ Semantic Analyzer (src/semantic.rs)
 Karaka Dependency Graph
@@ -207,10 +207,10 @@ LazyFrame → Arrow → Results
 src/
   dhatu.rs         - Operation definitions (15+ dhatus)
   graph.rs         - Semantic graph IR + propagation
-  lexer_v2.rs      - ASCII tokenizer (no regex)
+  lexer.rs         - ASCII tokenizer (no regex)
   semantic.rs      - Semantic analyzer (3-phase parser)
-  main_v2.rs       - CLI/REPL interface
-  lib_v2.rs        - Module exports
+  main.rs          - CLI/REPL interface
+  lib.rs           - Module exports
 
 docs/
   SEMANTIC_GRAPH_ARCHITECTURE.md   - Full design
@@ -297,7 +297,7 @@ tests/  (25+ tests, all passing)
 1. **src/graph.rs** - How semantic graph works
 2. **src/semantic.rs** - How Anuvrtti propagates
 3. **SEMANTIC_GRAPH_ARCHITECTURE.md** - Theory + examples
-4. **src/main_v2.rs** - How to use the CLI
+4. **src/main.rs** - How to use the CLI
 
 ---
 

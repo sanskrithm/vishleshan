@@ -36,7 +36,7 @@ sales-at revenue-ena chid-tva yuj-tva ci-tva drsh-ti
 INPUT (ASCII Transliterated Sanskrit)
 "sales-at revenue-ena chid-tva yuj-tva drsh-ti"
 │
-├─ LEXER (lexer_v2.rs)
+├─ LEXER (lexer.rs)
 │  └─ Tokenization (hand-written FSM, ASCII-only)
 │     Tokens: [Morpheme("sales", "at"), Morpheme("revenue", "ena"), ...]
 │
@@ -52,18 +52,18 @@ INPUT (ASCII Transliterated Sanskrit)
 │     - Edges: Karaka relations (semantic dependencies)
 │     - Graph: DAG (for lazy evaluation + optimization)
 │
-├─ OPTIMIZER (future: optimizer.rs)
-│  └─ Rewrite passes
-│     - Predicate pushdown
-│     - Projection pruning
-│     - Operator fusion
-│     - Semantic rewrite chains
+├─ OPTIMIZER (src/optimizer.rs)
+│  └─ Paribhasha rewrite passes (implemented: scaffolding + basic pass traits)
+│     - Redundant filter elimination (scaffolded)
+│     - Filter pushdown (scaffolded)
+│     - Aggregation coalescing (scaffolded)
+│     - Projection pruning (scaffolded)
 │
-├─ EXECUTION PLANNER (future: planner.rs)
-│  └─ Topological sort → DAG
+├─ EXECUTION PLANNER (src/planner.rs)
+│  └─ Topological sort → ExecutionPlan IR → backend selection
 │
 ├─ POLARS LOWERING (future: runtime.rs)
-│  └─ LazyFrame IR generation
+│  └─ LazyFrame IR generation (planned for v0.3)
 │
 └─ OUTPUT (Apache Arrow execution)
    Results collected and displayed
@@ -75,9 +75,11 @@ INPUT (ASCII Transliterated Sanskrit)
 |--------|---------|-------|------------------|
 | `dhatu.rs` | Operation opcodes (extended system) | 300+ | Dhātu system |
 | `graph.rs` | Semantic graph with Karaka relations | 400+ | Karaka theory |
-| `lexer_v2.rs` | ASCII tokenizer (FSM, zero-copy) | 200+ | Morpheme parsing |
-| `semantic.rs` | Graph builder + Anuvrtti engine | 350+ | Anuvrtti propagation |
-| `main_v2.rs` | CLI, REPL, examples | 300+ | User interface |
+| `lexer.rs` | ASCII tokenizer (FSM, zero-copy) | 200+ | Morpheme parsing |
+| `semantic.rs` | Graph builder + Anuvrtti engine | 380+ | Anuvrtti propagation |
+| `optimizer.rs` | Query optimizer (Paribhasha) | 260+ | Paribhasha / rewrite rules |
+| `planner.rs` | Execution planner | 230+ | Execution planning / backend IR |
+| `main.rs` | CLI, REPL, examples | 300+ | User interface |
 
 ---
 

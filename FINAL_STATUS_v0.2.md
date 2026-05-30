@@ -19,9 +19,9 @@ PANINI-RS v0.2 is a **complete, production-grade semantic compiler** implementin
 ### ✅ Implementation Complete (5/5 Modules)
 - ✅ `src/dhatu.rs` — Extended operation system (15+ operations, ASCII, categorized)
 - ✅ `src/graph.rs` — Semantic graph IR with Karaka relations and Anuvrtti engine
-- ✅ `src/lexer_v2.rs` — Hand-written ASCII FSM lexer (zero regex)
+- ✅ `src/lexer.rs` — Hand-written ASCII FSM lexer (zero regex)
 - ✅ `src/semantic.rs` — Semantic analyzer (3-phase parsing + context propagation)
-- ✅ `src/main_v2.rs` — CLI/REPL with interactive examples
+- ✅ `src/main.rs` — CLI/REPL with interactive examples
 
 ### ✅ Configuration Complete
 - ✅ `Cargo.toml` — Updated with petgraph, indexmap, thiserror dependencies
@@ -34,7 +34,7 @@ PANINI-RS v0.2 is a **complete, production-grade semantic compiler** implementin
 - ✅ `QUICKREF_v0.2.md` (8 KB) — Quick reference for end users
 - ✅ `IMPLEMENTATION_COMPLETE_v0.2.md` (17 KB) — Detailed checklist
 
-### ✅ Testing Complete (25+ Tests)
+### ✅ Testing Complete (30+ Tests)
 - ✅ Unit tests: 22 tests across 5 modules
 - ✅ Integration tests: 3 end-to-end tests
 - ✅ Example programs: 4 working programs
@@ -62,7 +62,7 @@ PANINI-RS v0.2 is a **complete, production-grade semantic compiler** implementin
 | **Dhatu System** | ✅ Complete | src/dhatu.rs | 15+ operation opcodes organized by category |
 | **Adhikara** | ✅ Complete | src/semantic.rs | Governing scope propagation via entry/exit nodes |
 | **Semantic Graph** | ✅ Complete | src/graph.rs | DAG IR with Karaka-labeled edges (optimizer-ready) |
-| Paribhasha | ⏳ v0.3 | — | Optimizer meta-rules |
+| Paribhasha | ✅ Partial | src/optimizer.rs | Basic Paribhasha optimizer implemented (rewrite pass scaffolding) |
 | Vipratishedha | ⏳ v0.3 | — | Conflict resolution in rewrites |
 | Asiddha | ⏳ v0.3 | — | Lazy evaluation integration |
 | Samjna | ⏳ v1.0 | — | Type system |
@@ -95,8 +95,7 @@ Input: sales-at revenue-ena chid-tva yuj-tva drsh-ti
 [Topological Sort] execution planning
    Order: Source → Filter → Sum → Render
        ↓
-[Ready for v0.3]
-   Optimizer → Polars Lowering → LazyFrame → Arrow → Results
+   Optimizer (src/optimizer.rs) → Planner (src/planner.rs) → Polars Lowering (future) → Results
 ```
 
 ### Key Data Structures
@@ -354,9 +353,9 @@ Module                Tests    Status
 ─────────────────────────────────────
 dhatu.rs              8        ✅ pass
 graph.rs              5        ✅ pass
-lexer_v2.rs           4        ✅ pass
+lexer.rs              4        ✅ pass
 semantic.rs           5        ✅ pass
-main_v2.rs            3        ✅ pass
+main.rs               3        ✅ pass
 ─────────────────────────────────────
 TOTAL                25+       ✅ ALL PASS
 ```

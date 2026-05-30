@@ -2,7 +2,7 @@
 ///
 /// Dhatus are semantic operation opcodes.
 /// These are the fundamental semantic actions that can be composed.
-/// 
+///
 /// All using ASCII transliteration (no Unicode diacritics):
 /// - at (apādāna, source)
 /// - ena (karaṇa, instrument)
@@ -16,7 +16,6 @@
 /// 3. Relational dhatus (mel, etc.)
 /// 4. Predicate dhatus (adhik, nyun, sam, asam)
 /// 5. Terminal dhatus (drsh)
-
 use std::fmt;
 
 /// Aggregation operations (Samkhya dhatus)
@@ -162,26 +161,26 @@ impl Dhatu {
             "gan" => Some(Self::Aggregation(AggregationDhatu::Gan)),
             "lagh" => Some(Self::Aggregation(AggregationDhatu::Lagh)),
             "mah" => Some(Self::Aggregation(AggregationDhatu::Mah)),
-            
+
             // Transformation
             "chid" => Some(Self::Transformation(TransformationDhatu::Chid)),
             "adhyaya" => Some(Self::Transformation(TransformationDhatu::Adhyaya)),
             "kram" => Some(Self::Transformation(TransformationDhatu::Kram)),
             "vibhaj" => Some(Self::Transformation(TransformationDhatu::Vibhaj)),
-            
+
             // Relational
             "ci" => Some(Self::Relational(RelationalDhatu::Ci)),
             "mel" => Some(Self::Relational(RelationalDhatu::Mel)),
-            
+
             // Predicate
             "adhik" => Some(Self::Predicate(PredicateDhatu::Adhik)),
             "nyun" => Some(Self::Predicate(PredicateDhatu::Nyun)),
             "sam" => Some(Self::Predicate(PredicateDhatu::Sam)),
             "asam" => Some(Self::Predicate(PredicateDhatu::Asam)),
-            
+
             // Terminal
             "drsh" => Some(Self::Terminal(TerminalDhatu::Drsh)),
-            
+
             _ => None,
         }
     }
@@ -267,16 +266,34 @@ mod tests {
 
     #[test]
     fn test_aggregation_dhatus() {
-        assert_eq!(Dhatu::from_ascii("yuj"), Some(Dhatu::Aggregation(AggregationDhatu::Yuj)));
-        assert_eq!(Dhatu::from_ascii("madh"), Some(Dhatu::Aggregation(AggregationDhatu::Madh)));
-        assert_eq!(Dhatu::from_ascii("gan"), Some(Dhatu::Aggregation(AggregationDhatu::Gan)));
+        assert_eq!(
+            Dhatu::from_ascii("yuj"),
+            Some(Dhatu::Aggregation(AggregationDhatu::Yuj))
+        );
+        assert_eq!(
+            Dhatu::from_ascii("madh"),
+            Some(Dhatu::Aggregation(AggregationDhatu::Madh))
+        );
+        assert_eq!(
+            Dhatu::from_ascii("gan"),
+            Some(Dhatu::Aggregation(AggregationDhatu::Gan))
+        );
     }
 
     #[test]
     fn test_transformation_dhatus() {
-        assert_eq!(Dhatu::from_ascii("chid"), Some(Dhatu::Transformation(TransformationDhatu::Chid)));
-        assert_eq!(Dhatu::from_ascii("adhyaya"), Some(Dhatu::Transformation(TransformationDhatu::Adhyaya)));
-        assert_eq!(Dhatu::from_ascii("kram"), Some(Dhatu::Transformation(TransformationDhatu::Kram)));
+        assert_eq!(
+            Dhatu::from_ascii("chid"),
+            Some(Dhatu::Transformation(TransformationDhatu::Chid))
+        );
+        assert_eq!(
+            Dhatu::from_ascii("adhyaya"),
+            Some(Dhatu::Transformation(TransformationDhatu::Adhyaya))
+        );
+        assert_eq!(
+            Dhatu::from_ascii("kram"),
+            Some(Dhatu::Transformation(TransformationDhatu::Kram))
+        );
     }
 
     #[test]

@@ -48,14 +48,14 @@ Input → Lexer → Semantic Analyzer → Semantic Graph → Optimizer → Plann
 ### Added (v0.2)
 - `src/dhatu.rs` - Extended Dhatu system (operation opcodes)
 - `src/graph.rs` - Semantic graph IR with Karaka relations
-- `src/lexer_v2.rs` - ASCII-only FSM lexer
+- `src/lexer.rs` - ASCII-only FSM lexer
 - `src/semantic.rs` - Semantic analyzer + Anuvrtti engine
-- `src/lib_v2.rs` - Module exports
+- `src/lib.rs` - Module exports
 
-### Reserved (Future)
-- `src/optimizer.rs` - Query optimization passes
-- `src/planner.rs` - Execution DAG planning
-- `src/runtime.rs` - Polars/Arrow lowering
+### Reserved / Implemented
+- `src/optimizer.rs` - Query optimization passes (Paribhasha) — implemented (basic pass scaffolding)
+- `src/planner.rs` - Execution DAG planning — implemented (ExecutionPlan IR)
+- `src/runtime.rs` - Polars/Arrow lowering (future)
 
 ---
 

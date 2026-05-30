@@ -10,17 +10,19 @@
 
 ### What Was Delivered
 
-#### ✓ Core Compiler Modules (5)
+#### ✓ Core Compiler Modules (7)
 - [x] `src/dhatu.rs` (300 lines) - Extended Dhatu system with 15+ operations
 - [x] `src/graph.rs` (400 lines) - Semantic graph IR with Karaka relations
-- [x] `src/lexer_v2.rs` (200 lines) - ASCII-only FSM lexer
-- [x] `src/semantic.rs` (350 lines) - Semantic analyzer + Anuvrtti engine
-- [x] `src/main_v2.rs` (300 lines) - CLI/REPL with examples
+- [x] `src/lexer.rs` (200 lines) - ASCII-only FSM lexer
+- [x] `src/semantic.rs` (380 lines) - Semantic analyzer + Anuvrtti engine
+- [x] `src/optimizer.rs` (260 lines) - Paribhasha rewrite engine (basic passes)
+- [x] `src/planner.rs` (230 lines) - Execution planner and ExecutionPlan IR
+- [x] `src/main.rs` (300 lines) - CLI/REPL with examples
 
 #### ✓ Configuration
-- [x] `Cargo.toml` - Updated with petgraph, indexmap, thiserror
+- [x] `Cargo.toml` - Updated with indexmap, thiserror
 
-#### ✓ Documentation (3 NEW)
+#### ✓ Documentation (4 NEW)
 - [x] `SEMANTIC_GRAPH_ARCHITECTURE.md` (12 KB) - Complete architecture guide
 - [x] `MIGRATION_v0.1_TO_v0.2.md` (9 KB) - Migration guide for users
 - [x] `RELEASE_NOTES_v0.2.md` (12 KB) - Release summary & features
@@ -29,10 +31,12 @@
 #### ✓ Test Coverage
 - [x] `dhatu.rs` - 8 unit tests
 - [x] `graph.rs` - 5 unit tests
-- [x] `lexer_v2.rs` - 4 unit tests
-- [x] `semantic.rs` - 5 unit tests
-- [x] `main_v2.rs` - 3 integration tests
-- [x] **Total: 25+ tests**
+- [x] `lexer.rs` - 4 unit tests
+- [x] `semantic.rs` - 6 unit tests
+- [x] `optimizer.rs` - 3 unit tests
+- [x] `planner.rs` - 3 unit tests
+- [x] `main.rs` - 4 integration tests
+- [x] **Total: 30+ tests**
 
 ---
 
@@ -100,37 +104,27 @@
 
 ### ⏳ FUTURE (6/12)
 
+**Note:** Basic Paribhasha optimizer and planner are implemented in v0.2; remaining meta-rules, cost model improvements, and runtime lowering are planned for v0.3+.
+
 #### 7. ⏳ PARIBHASHA (META-RULES)
-- [ ] Optimizer meta-rules about optimizer rules
-- [ ] Scheduled: v0.3 (Optimizer phase)
+- [x] Basic optimizer engine implemented (optimizer.rs)
+- [ ] Optimizer meta-rules and deterministic precedence (v0.3)
 
 #### 8. ⏳ VIPRATISHEDHA (CONFLICT RESOLUTION)
 - [ ] Deterministic optimizer precedence
-- [ ] Rewrite ordering rules
-- [ ] Scheduled: v0.3 (Optimizer phase)
+- [ ] Rewrite ordering rules (v0.3)
 
 #### 9. ⏳ ASIDDHA (DEFERRED VISIBILITY)
-- [ ] Lazy evaluation integration
-- [ ] Staged optimization
-- [ ] Deferred execution barriers
-- [ ] Scheduled: v0.3-v0.4
+- [ ] Lazy evaluation integration into runtime lowering (v0.3)
 
 #### 10. ⏳ SAMJNA (TECHNICAL DEFINITIONS)
-- [ ] Semantic type system
-- [ ] Static validation
-- [ ] Optimizer-aware types
-- [ ] Scheduled: v1.0 (Type system phase)
+- [ ] Semantic type system (v1.0)
 
 #### 11. ⏳ SANDHI (ARCHITECTURAL FORM)
-- [ ] Operation fusion (not Sanskrit phonetic fusion)
-- [ ] Fused vectorized kernels
-- [ ] Scheduled: v0.3 (Optimizer phase)
+- [ ] Operation fusion and vectorized kernels (v0.3+)
 
 #### 12. ⏳ SAMASA (SEMANTIC COMPRESSION)
-- [ ] Compound semantic operations
-- [ ] Macro operations
-- [ ] Reusable execution motifs
-- [ ] Scheduled: v0.4-v1.0
+- [ ] Compound semantic operations & macros (v0.4-v1.0)
 
 ---
 
@@ -146,7 +140,7 @@
 - [x] Morpheme tokenization (root-suffix split)
 - [x] Verb form tokenization (dhatu-sutra split)
 
-**File:** `src/lexer_v2.rs` (200 lines, 4 tests)
+**File:** `src/lexer.rs` (200 lines, 4 tests)
 
 #### Phase 2: Semantic Analysis
 - [x] Three-phase parsing (source → instruments → operations)
@@ -155,7 +149,7 @@
 - [x] Graph node/edge creation
 - [x] Semantic validation
 
-**File:** `src/semantic.rs` (350 lines, 5 tests)
+**File:** `src/semantic.rs` (380 lines, 6 tests)
 
 #### Phase 3: Semantic Graph IR
 - [x] Node types: Source, Filter, GroupBy, Aggregate, Project, Render
@@ -236,10 +230,10 @@
 ```
 ✓ dhatu.rs           300 lines  8 tests   Extended Dhatu system
 ✓ graph.rs           400 lines  5 tests   Semantic graph IR
-✓ lexer_v2.rs        200 lines  4 tests   ASCII FSM lexer
-✓ semantic.rs        350 lines  5 tests   Semantic analyzer
-✓ main_v2.rs         300 lines  3 tests   CLI/REPL
-✓ lib_v2.rs          50 lines   0 tests   Module exports
+✓ lexer.rs           200 lines  4 tests   ASCII FSM lexer
+✓ semantic.rs        380 lines  6 tests   Semantic analyzer
+✓ main.rs            300 lines  4 tests   CLI/REPL
+✓ lib.rs             60 lines   0 tests   Module exports
 
 LEGACY (v0.1, for reference):
 - token.rs           Deprecated
@@ -480,18 +474,18 @@ Status: Works correctly ✓
 ### Unit Tests
 - [x] dhatu.rs: 8 tests (parsing, categorization)
 - [x] graph.rs: 5 tests (construction, validation, propagation)
-- [x] lexer_v2.rs: 4 tests (tokenization, error cases)
-- [x] semantic.rs: 5 tests (analysis, phases, validation)
-- [x] main_v2.rs: 3 integration tests
+- [x] lexer.rs: 4 tests (tokenization, error cases)
+- [x] semantic.rs: 6 tests (analysis, phases, validation)
+- [x] main.rs: 4 integration tests
 
 ### Test Results
 ```
 running 25 tests
 test dhatu::tests::...     ok
 test graph::tests::...     ok
-test lexer_v2::tests::...  ok
+test lexer::tests::...  ok
 test semantic::tests::...  ok
-test main_v2::tests::...   ok
+test main::tests::...   ok
 
 test result: ok. 25 passed; 0 failed; 0 ignored
 ```

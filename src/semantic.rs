@@ -11,8 +11,9 @@
 ///   subsequent operations
 /// - Adhikara: Governing scope propagation
 /// - Vipratisedha: Conflict resolution (first-match wins for overloading)
-
-use crate::dhatu::{AggregationDhatu, Dhatu, KarakaSuffix, RelationalDhatu, SutraSuffix, TransformationDhatu};
+use crate::dhatu::{
+    AggregationDhatu, Dhatu, KarakaSuffix, PredicateDhatu, RelationalDhatu, SutraSuffix, TransformationDhatu,
+};
 use crate::graph::{Karaka, NodeKind, SemanticGraph};
 use crate::lexer::Token;
 use std::fmt;
@@ -69,10 +70,9 @@ impl SemanticAnalyzer {
         match &tokens[pos] {
             Token::Morpheme { root, karaka } if *karaka == KarakaSuffix::At => {
                 self.source = Some(root.clone());
-                let source_node = self.graph.add_node(
-                    NodeKind::Source { name: root.clone() },
-                    false,
-                );
+                let source_node = self
+                    .graph
+                    .add_node(NodeKind::Source { name: root.clone() }, false);
                 self.graph.set_entry(source_node);
                 self.current_node = Some(source_node);
                 pos += 1;
@@ -134,7 +134,9 @@ impl SemanticAnalyzer {
                     .join(" AND ");
 
                 let node = self.graph.add_node(
-                    NodeKind::Filter { predicate: conditions },
+                    NodeKind::Filter {
+                        predicate: conditions,
+                    },
                     false,
                 );
 
@@ -147,7 +149,9 @@ impl SemanticAnalyzer {
             Dhatu::Transformation(TransformationDhatu::Adhyaya) => {
                 // Project/select operation
                 let node = self.graph.add_node(
-                    NodeKind::Project { columns: context.to_vec() },
+                    NodeKind::Project {
+                        columns: context.to_vec(),
+                    },
                     false,
                 );
 
@@ -160,7 +164,9 @@ impl SemanticAnalyzer {
             Dhatu::Relational(RelationalDhatu::Ci) => {
                 // Group operation
                 let node = self.graph.add_node(
-                    NodeKind::GroupBy { columns: context.to_vec() },
+                    NodeKind::GroupBy {
+                        columns: context.to_vec(),
+                    },
                     false,
                 );
 
@@ -218,6 +224,161 @@ impl SemanticAnalyzer {
                 self.current_node = Some(node);
             }
 
+            Dhatu::Aggregation(AggregationDhatu::Lagh) => {
+                // Minimum aggregation
+                let node = self.graph.add_node(
+                    NodeKind::Aggregate {
+                        op: "min".to_string(),
+                        columns: context.to_vec(),
+                    },
+                    false,
+                );
+
+                if let Some(current) = self.current_node {
+                    self.graph.add_edge(current, node, Karaka::Object);
+                }
+                self.current_node = Some(node);
+            }
+
+            Dhatu::Aggregation(AggregationDhatu::Mah) => {
+                // Maximum aggregation
+                let node = self.graph.add_node(
+                    NodeKind::Aggregate {
+                        op: "max".to_string(),
+                        columns: context.to_vec(),
+                    },
+                    false,
+                );
+
+                if let Some(current) = self.current_node {
+                    self.graph.add_edge(current, node, Karaka::Object);
+                }
+                self.current_node = Some(node);
+            }
+
+            Dhatu::Transformation(TransformationDhatu::Kram) => {
+                // Sort operation
+                let node = self.graph.add_node(
+                    NodeKind::Sort {
+                        columns: context.to_vec(),
+                        desc: false,
+                    },
+                    false,
+                );
+
+                if let Some(current) = self.current_node {
+                    self.graph.add_edge(current, node, Karaka::Object);
+                }
+                self.current_node = Some(node);
+            }
+
+            Dhatu::Transformation(TransformationDhatu::Vibhaj) => {
+                // Partition operation (stored as distinct for now)
+                let node = self.graph.add_node(
+                    NodeKind::Project {
+                        columns: context.to_vec(),
+                    },
+                    false,
+                );
+
+                if let Some(current) = self.current_node {
+                    self.graph.add_edge(current, node, Karaka::Object);
+                }
+                self.current_node = Some(node);
+            }
+
+            Dhatu::Relational(RelationalDhatu::Mel) => {
+                // Join operation
+                let node = self.graph.add_node(
+                    NodeKind::Join {
+                        kind: "inner".to_string(),
+                        on: context.to_vec(),
+                    },
+                    false,
+                );
+
+                if let Some(current) = self.current_node {
+                    self.graph.add_edge(current, node, Karaka::Instrument);
+                }
+                self.current_node = Some(node);
+            }
+
+            Dhatu::Predicate(PredicateDhatu::Adhik) => {
+                // Greater than predicate
+                let predicate = context
+                    .iter()
+                    .map(|c| format!("{} > 0", c))
+                    .collect::<Vec<_>>()
+                    .join(" AND ");
+
+                let node = self.graph.add_node(
+                    NodeKind::Filter { predicate },
+                    false,
+                );
+
+                if let Some(current) = self.current_node {
+                    self.graph.add_edge(current, node, Karaka::Object);
+                }
+                self.current_node = Some(node);
+            }
+
+            Dhatu::Predicate(PredicateDhatu::Nyun) => {
+                // Less than predicate
+                let predicate = context
+                    .iter()
+                    .map(|c| format!("{} < 0", c))
+                    .collect::<Vec<_>>()
+                    .join(" AND ");
+
+                let node = self.graph.add_node(
+                    NodeKind::Filter { predicate },
+                    false,
+                );
+
+                if let Some(current) = self.current_node {
+                    self.graph.add_edge(current, node, Karaka::Object);
+                }
+                self.current_node = Some(node);
+            }
+
+            Dhatu::Predicate(PredicateDhatu::Sam) => {
+                // Equal predicate
+                let predicate = context
+                    .iter()
+                    .map(|c| format!("{} = 0", c))
+                    .collect::<Vec<_>>()
+                    .join(" AND ");
+
+                let node = self.graph.add_node(
+                    NodeKind::Filter { predicate },
+                    false,
+                );
+
+                if let Some(current) = self.current_node {
+                    self.graph.add_edge(current, node, Karaka::Object);
+                }
+                self.current_node = Some(node);
+            }
+
+            Dhatu::Predicate(PredicateDhatu::Asam) => {
+                // Not equal predicate
+                let predicate = context
+                    .iter()
+                    .map(|c| format!("{} != 0", c))
+                    .collect::<Vec<_>>()
+                    .join(" AND ");
+
+                let node = self.graph.add_node(
+                    NodeKind::Filter { predicate },
+                    false,
+                );
+
+                if let Some(current) = self.current_node {
+                    self.graph.add_edge(current, node, Karaka::Object);
+                }
+                self.current_node = Some(node);
+            }
+
             Dhatu::Terminal(_) => {
                 // Render (terminal)
                 let node = self.graph.add_node(NodeKind::Render, true);
@@ -228,9 +389,9 @@ impl SemanticAnalyzer {
                 self.current_node = Some(node);
             }
 
-            _ => {
+            Dhatu::Custom => {
                 return Err(SemanticError::InvalidSequence {
-                    reason: format!("Unsupported dhatu: {:?}", dhatu),
+                    reason: "Custom dhatus not yet supported".to_string(),
                 });
             }
         }
@@ -248,7 +409,7 @@ impl Default for SemanticAnalyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dhatu::{TransformationDhatu, TerminalDhatu};
+    use crate::dhatu::{TerminalDhatu, TransformationDhatu};
     use crate::lexer::Lexer;
 
     fn tokenize(input: &str) -> Vec<Token> {

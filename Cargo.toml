@@ -3,7 +3,7 @@ name = "panini-rs"
 version = "0.2.0"
 edition = "2021"
 description = "Morphology-driven semantic analytics compiler"
-authors = ["Panini Compiler Team"]
+authors = ["Bipin Singh"]
 
 [dependencies]
 polars = { version = "0.35", features = ["lazy", "parquet", "csv", "strings"] }

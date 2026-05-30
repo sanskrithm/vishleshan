@@ -92,7 +92,7 @@ Edges labeled with semantic roles:
 ```
 INPUT (ASCII Transliterated)
 │
-├─ LEXER v0.2 (lexer_v2.rs)
+├─ LEXER v0.2 (lexer.rs)
 │  └─ Hand-written FSM, ASCII-only
 │
 ├─ SEMANTIC ANALYZER (semantic.rs)
@@ -104,14 +104,14 @@ INPUT (ASCII Transliterated)
 │  ├─ DAG: for lazy evaluation
 │  └─ Context propagation (Anuvrtti)
 │
-├─ OPTIMIZER (future: v0.3)
-│  └─ Rewrite passes, cost-based optimization
+├─ OPTIMIZER (src/optimizer.rs)
+│  └─ Paribhasha rewrite passes (redundant-filter elimination, pushdown, coalescing)
 │
-├─ PLANNER (future: v0.3)
-│  └─ Topological sort → execution DAG
+├─ PLANNER (src/planner.rs)
+│  └─ Topological sort → ExecutionPlan IR (backend-agnostic)
 │
-└─ POLARS RUNTIME (future: v0.3)
-   └─ LazyFrame IR generation
+└─ POLARS RUNTIME (future)
+  └─ LazyFrame IR generation (planned for v0.3 runtime lowering)
 ```
 
 ---
@@ -122,10 +122,12 @@ INPUT (ASCII Transliterated)
 |--------|---------|-------|-------|
 | `dhatu.rs` | Extended Dhatu system (15+ ops) | 300 | 8 |
 | `graph.rs` | Semantic graph IR with Karaka | 400 | 5 |
-| `lexer_v2.rs` | ASCII FSM lexer | 200 | 4 |
-| `semantic.rs` | Semantic analyzer + Anuvrtti | 350 | 5 |
-| `main_v2.rs` | CLI, REPL, examples | 300 | 3 |
-| **Total** | | **1,550** | **25+** |
+| `lexer.rs` | ASCII FSM lexer | 200 | 4 |
+| `semantic.rs` | Semantic analyzer + Anuvrtti | 380 | 6 |
+| `optimizer.rs` | Paribhasha optimizer (basic passes) | 260 | 3 |
+| `planner.rs` | Execution planner & ExecutionPlan IR | 230 | 3 |
+| `main.rs` | CLI, REPL, examples | 300 | 4 |
+| **Total** | | **2,070** | **30+** |
 
 ---
 
@@ -134,11 +136,12 @@ INPUT (ASCII Transliterated)
 ### Source Code
 - ✓ `src/dhatu.rs` - Extended Dhatu system
 - ✓ `src/graph.rs` - Semantic graph IR
-- ✓ `src/lexer_v2.rs` - ASCII lexer
+- ✓ `src/lexer.rs` - ASCII lexer
 - ✓ `src/semantic.rs` - Semantic analyzer
-- ✓ `src/main_v2.rs` - CLI/REPL
-- ✓ `src/lib_v2.rs` - Module exports
-- ✓ `Cargo.toml` - Updated dependencies (petgraph, indexmap, thiserror)
+- ✓ `src/optimizer.rs` - Query optimizer (Paribhasha)
+- ✓ `src/planner.rs` - Execution planner
+- ✓ `src/main.rs` - CLI/REPL
+- ✓ `Cargo.toml` - Updated dependencies (indexmap, thiserror)
 
 ### Documentation
 - ✓ `SEMANTIC_GRAPH_ARCHITECTURE.md` (12+ KB) - Complete architecture guide

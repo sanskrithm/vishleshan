@@ -64,12 +64,14 @@ Then type: `sales-at revenue-ena chid-tva yuj-tva drsh-ti`
 
 ```
 src/
-  dhatu.rs        (273 lines) - Operation definitions (15+ operations)
-  graph.rs        (322 lines) - Semantic graph IR + Anuvrtti engine
-  lexer_v2.rs     (175 lines) - ASCII-only tokenizer
-  semantic.rs     (350 lines) - Semantic analyzer + 3-phase parser
-  main_v2.rs      (275 lines) - CLI/REPL + examples
-  lib_v2.rs       (42 lines)  - Module exports
+  dhatu.rs        (300 lines) - Operation definitions (15+ operations)
+  graph.rs        (400 lines) - Semantic graph IR + Anuvrtti engine
+  lexer.rs        (175 lines) - ASCII-only tokenizer
+  semantic.rs     (380 lines) - Semantic analyzer + 3-phase parser
+  optimizer.rs    (260 lines) - Paribhasha optimizer (rewrite engine)
+  planner.rs      (230 lines) - Execution planner & ExecutionPlan IR
+  main.rs         (300 lines) - CLI/REPL + examples
+  lib.rs          (60 lines)  - Module exports
 ```
 
 **Total: 1,437 lines of production code**
@@ -91,7 +93,7 @@ src/
 - ✅ CLI/REPL (interactive interface)
 
 ### Testing
-- ✅ 25+ unit & integration tests
+- ✅ 30+ unit & integration tests
 - ✅ 4 working example programs
 - ✅ Error handling comprehensive
 - ✅ All tests pass (< 2 sec)
@@ -331,7 +333,7 @@ data-at revenue-ena chid-tva yuj-tva madh-tva drsh-ti
 - **FINAL_STATUS_v0.2.md** — Complete checklist
 
 ### Code
-- **src/main_v2.rs** — CLI/REPL (good entry point)
+- **src/main.rs** — CLI/REPL (good entry point)
 - **src/semantic.rs** — Core analyzer
 - **src/graph.rs** — Semantic graph IR
 

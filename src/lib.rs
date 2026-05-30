@@ -26,14 +26,14 @@
 /// - optimizer - Query optimization passes (rewrite rules)
 /// - planner - Execution DAG planning
 /// - runtime - Polars LazyFrame lowering (detailed)
-
 pub mod dhatu;
 pub mod graph;
 pub mod lexer;
 pub mod semantic;
+pub mod optimizer;
+pub mod semantic_ir;
 
 // Future modules (placeholders)
-// pub mod optimizer;
 // pub mod planner;
 // pub mod runtime;
 
@@ -41,3 +41,5 @@ pub use dhatu::*;
 pub use graph::*;
 pub use lexer::*;
 pub use semantic::*;
+pub use optimizer::*;
+pub use semantic_ir::*;

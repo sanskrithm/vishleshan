@@ -34,10 +34,12 @@ panini-rs/
 ├── src/
 │   ├── dhatu.rs              [NEW] Extended Dhātu system (15+ operations)
 │   ├── graph.rs              [NEW] Semantic graph IR with Karaka relations
-│   ├── lexer_v2.rs           [NEW] ASCII-only FSM lexer
+│   ├── lexer.rs              [NEW] ASCII-only FSM lexer
 │   ├── semantic.rs           [NEW] Semantic analyzer + Anuvrtti engine
-│   ├── main_v2.rs            [NEW] CLI/REPL with examples
-│   ├── lib_v2.rs             [NEW] Module exports
+│   ├── optimizer.rs          [NEW] Paribhasha optimizer (rewrite engine)
+│   ├── planner.rs            [NEW] Execution planner (ExecutionPlan IR)
+│   ├── main.rs               [NEW] CLI/REPL with examples
+│   ├── lib.rs                [NEW] Module exports
 │   │
 │   ├── token.rs              [v0.1] Legacy token definitions (deprecated)
 │   ├── lexer.rs              [v0.1] Legacy lexer (deprecated)
@@ -80,12 +82,14 @@ panini-rs/
 |------|---------|-------|-------------|
 | `src/dhatu.rs` | Extended Dhātu system | 300 | 15+ operations, ASCII, categorized |
 | `src/graph.rs` | Semantic graph IR | 400 | Nodes, edges (Karaka), DAG, context prop |
-| `src/lexer_v2.rs` | ASCII FSM lexer | 200 | Zero-copy, ASCII-only, hand-written |
-| `src/semantic.rs` | Semantic analyzer | 350 | Graph builder, Anuvrtti, 3-phase parsing |
-| `src/main_v2.rs` | CLI/REPL | 300 | Interactive, examples, help |
+| `src/lexer.rs` | ASCII FSM lexer | 200 | Zero-copy, ASCII-only, hand-written |
+| `src/semantic.rs` | Semantic analyzer | 380 | Graph builder, Anuvrtti, 3-phase parsing |
+| `src/optimizer.rs` | Paribhasha optimizer | 260 | Rewrite engine scaffolding |
+| `src/planner.rs` | Execution planner | 230 | ExecutionPlan IR |
+| `src/main.rs` | CLI/REPL | 300 | Interactive, examples, help |
 | `Cargo.toml` | Dependencies | 30 | petgraph, indexmap, thiserror |
 
-**Total:** 1,500+ lines of production code, 25+ tests
+**Total:** 2,000+ lines of production code, 30+ tests
 
 ### Documentation (All New v0.2)
 
@@ -102,15 +106,15 @@ panini-rs/
 ## Deprecated (v0.1 Code - For Reference Only)
 
 ### Old Modules (Do Not Use)
-- `src/token.rs` - Replaced by dhatu.rs
-- `src/lexer.rs` - Replaced by lexer_v2.rs
-- `src/parser.rs` - Replaced by semantic.rs
-- `src/ast.rs` - Replaced by graph.rs
-- `src/compiler.rs` - Integrated into semantic.rs
-- `src/main.rs` - Replaced by main_v2.rs
-- `src/lib.rs` - Replaced by lib_v2.rs
+- `src/token.rs` - Replaced by `src/dhatu.rs`
+- `src/lexer.rs` - Replaced by `src/lexer.rs` (new ASCII lexer)
+- `src/parser.rs` - Replaced by `src/semantic.rs`
+- `src/ast.rs` - Replaced by `src/graph.rs`
+- `src/compiler.rs` - Integrated into `src/semantic.rs`
+- `src/main.rs` - Replaced by `src/main.rs` (new CLI/REPL)
+- `src/lib.rs` - Replaced by `src/lib.rs` (module exports)
 
-**These are kept for reference/migration purposes only.**
+**These legacy v0.1 files are kept only for migration reference.**
 
 ---
 
@@ -136,11 +140,11 @@ panini-rs/
 
 1. **Architecture**: `SEMANTIC_GRAPH_ARCHITECTURE.md` (20 min)
 2. **Source code**: Read modules in order:
-   - `src/dhatu.rs` - Types and parsing
-   - `src/graph.rs` - Core IR
-   - `src/lexer_v2.rs` - Tokenization
-   - `src/semantic.rs` - Analysis
-   - `src/main_v2.rs` - Integration
+  - `src/dhatu.rs` - Types and parsing
+  - `src/graph.rs` - Core IR
+  - `src/lexer.rs` - Tokenization
+  - `src/semantic.rs` - Analysis
+  - `src/main.rs` - Integration
 3. **Tests**: Run `cargo test --release` (10 min)
 4. **Examples**: Run `cargo run --release -- example` (5 min)
 
@@ -211,21 +215,21 @@ Terminal:       drsh
 ## Module Dependencies
 
 ```
-main_v2.rs
+main.rs
   ├─ dhatu.rs (operation types)
   ├─ graph.rs (semantic IR)
-  ├─ lexer_v2.rs (tokenization)
+  ├─ lexer.rs (tokenization)
   └─ semantic.rs (analysis)
 
 semantic.rs
   ├─ dhatu.rs (Dhatu enum)
   ├─ graph.rs (NodeKind, Karaka)
-  └─ lexer_v2.rs (Token enum)
+  └─ lexer.rs (Token enum)
 
 graph.rs
   └─ [No internal dependencies]
 
-lexer_v2.rs
+lexer.rs
   └─ dhatu.rs (Dhatu parsing)
 ```
 
@@ -261,12 +265,12 @@ Expected: 4 example programs with compilation traces
 
 ## File Statistics
 
-### Source Code
+- ### Source Code
 - `dhatu.rs`: 300 lines (8 tests)
 - `graph.rs`: 400 lines (5 tests)
-- `lexer_v2.rs`: 200 lines (4 tests)
-- `semantic.rs`: 350 lines (5 tests)
-- `main_v2.rs`: 300 lines (3 tests)
+- `lexer.rs`: 200 lines (4 tests)
+- `semantic.rs`: 380 lines (6 tests)
+- `main.rs`: 300 lines (4 tests)
 - **Total**: 1,550 lines (25+ tests)
 
 ### Documentation
