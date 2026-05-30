@@ -1,0 +1,22 @@
+# Rust build artifacts
+target/
+**/target/
+Cargo.lock
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build outputs
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Dependencies
+*.rlib
